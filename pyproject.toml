@@ -1,0 +1,19 @@
+[project]
+name = "hotel_booking_ingest"
+version = "0.0.1"
+description = "Lakeflow SDP ingest for the Hotel Booking Demand dataset (bronze/silver/gold)."
+requires-python = ">=3.10"
+dependencies = []
+
+[project.optional-dependencies]
+dev = [
+    "pytest",
+    "ruff",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.ruff]
+line-length = 120

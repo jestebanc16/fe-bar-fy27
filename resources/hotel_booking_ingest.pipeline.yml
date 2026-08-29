@@ -1,0 +1,13 @@
+resources:
+  pipelines:
+    hotel_booking_ingest_etl:
+      name: hotel_booking_ingest_etl
+      catalog: ${var.catalog}
+      schema: ${var.schema}
+      serverless: true
+      root_path: ../src/hotel_booking_ingest
+      libraries:
+        - glob:
+            include: ../src/hotel_booking_ingest/transformations/**
+      configuration:
+        source_volume_path: /Volumes/${var.catalog}/${var.schema}/raw/hotel_bookings/

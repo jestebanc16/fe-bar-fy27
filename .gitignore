@@ -1,0 +1,11 @@
+# Raw dataset — never commit (Kaggle license + size)
+data/*.csv
+data/*.zip
+
+# Databricks bundle build artifacts
+.databricks/
+**/__pycache__/
+*.pyc
+
+# macOS
+.DS_Store

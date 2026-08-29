@@ -1,0 +1,29 @@
+bundle:
+  name: hotel_booking_ingest
+
+include:
+  - resources/*.yml
+
+variables:
+  catalog:
+    description: Unity Catalog catalog the medallion tables are written to.
+  schema:
+    description: Schema (within the catalog) for bronze/silver/gold tables and the raw Volume.
+
+targets:
+  dev:
+    mode: development
+    default: true
+    workspace:
+      host: https://fevm-serverless-stable-eojwo0.cloud.databricks.com
+    variables:
+      catalog: serverless_stable_eojwo0_catalog
+      schema: hotel_booking_dev
+
+  prod:
+    mode: production
+    workspace:
+      host: https://fevm-serverless-stable-eojwo0.cloud.databricks.com
+    variables:
+      catalog: serverless_stable_eojwo0_catalog
+      schema: hotel_booking
