@@ -1,0 +1,25 @@
+-- Constraints (reference DDL) - NOT applied by apply.sh in this environment.
+--
+-- Intent: informational primary keys + NOT NULL to document entity keys for BI/Genie
+-- join hints. However, both target tables are Lakeflow SDP-managed objects:
+--   * silver_bookings is a STREAMING TABLE  -> rejects external ALTER ... ADD CONSTRAINT
+--                                              / ALTER COLUMN ... SET NOT NULL
+--                                              (STREAMING_TABLE_OPERATION_NOT_ALLOWED).
+--   * gold_hotel_month is a MATERIALIZED VIEW -> rejects ALTER TABLE entirely
+--                                              (EXPECT_TABLE_NOT_VIEW).
+--
+-- So keys are documented via the data dictionary (governance/comments.sql):
+--   * silver_bookings.reservation_id  = content-hash surrogate (informational PK).
+--   * gold_hotel_month grain          = (hotel, arrival_month_start).
+-- NOT NULL on silver.hotel is effectively enforced at ingest by the pipeline's
+-- expect_or_drop("valid_hotel", "hotel IS NOT NULL").
+--
+-- To apply these in an environment where the tables are plain managed Delta tables
+-- (e.g. materialized outside SDP), the intended DDL is:
+--
+--   ALTER TABLE {catalog}.{schema}.silver_bookings ALTER COLUMN reservation_id SET NOT NULL;
+--   ALTER TABLE {catalog}.{schema}.silver_bookings ALTER COLUMN hotel SET NOT NULL;
+--   ALTER TABLE {catalog}.{schema}.silver_bookings
+--     ADD CONSTRAINT pk_silver_bookings PRIMARY KEY (reservation_id) NOT ENFORCED RELY;
+--   ALTER TABLE {catalog}.{schema}.gold_hotel_month
+--     ADD CONSTRAINT pk_gold_hotel_month PRIMARY KEY (hotel, arrival_month_start) NOT ENFORCED RELY;

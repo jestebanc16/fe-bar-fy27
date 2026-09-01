@@ -29,7 +29,7 @@ Lead with the buyer's numbers:
 | Stage | Component | What it does |
 |-------|-----------|--------------|
 | **Ingest** | Lakeflow | Land raw bookings into the Lakehouse (bronze), incrementally |
-| **Govern** | Unity Catalog | Bronze/silver/gold tables, guest PII masking, lineage |
+| **Govern** | Unity Catalog | Personas + column masks (country/agent/company), per-property row-level security, data dictionary, classification tags, lineage |
 | **Make it intelligent** | ML (+ optional GenAI) | Cancellation-probability classifier; MLflow tracking, UC-registered model, serving endpoint. Optional: LLM-generated recommended action per flagged reservation |
 | **Serve operationally** | Lakebase | Low-latency store of per-reservation risk scores + recommended actions for the app |
 | **Make it queryable** | Genie Room | Natural-language analytics: "expected cancellation rate for December?", "occupancy forecast next month?" |
@@ -83,9 +83,32 @@ databricks bundle run hotel_booking_ingest_etl -t dev -p <profile>
 ```
 
 Tables produced in `${catalog}.${schema}`: `bronze_bookings` (Auto Loader raw land),
-`silver_bookings` (typed, cleaned, one row per reservation), `gold_hotel_month`
-(hotel x month cancel rate, ADR, estimated lost revenue). Catalog/schema are bundle
-variables in [databricks.yml](databricks.yml).
+`silver_bookings` (typed, cleaned, one row per reservation, keyed by `reservation_id`),
+`gold_hotel_month` (hotel x month cancel rate, ADR, estimated lost revenue). Catalog/schema
+are bundle variables in [databricks.yml](databricks.yml).
+
+## Unity Catalog governance
+
+Governance is authored as idempotent SQL in [governance/](governance/) and applied by
+[governance/apply.sh](governance/apply.sh) (SDP can't express grants/masks/tags). Full
+design: [docs/superpowers/specs/2026-09-01-unity-catalog-governance-design.md](docs/superpowers/specs/2026-09-01-unity-catalog-governance-design.md).
+
+- Personas: `hotel_engineer` (full, unmasked), `hotel_analyst` (masked PII, all rows),
+  `hotel_mgr_city` / `hotel_mgr_resort` (masked PII, row-filtered to their property).
+- Dynamic column masks on `country` / `agent` / `company` (`mask_pii`).
+- Per-property row-level security on `hotel` (`hotel_row_filter`).
+- Column-level data dictionary, `hb_data_class` (pii/financial) + `layer`/`certified` tags,
+  and automatic bronze -> silver -> gold lineage.
+
+```bash
+PROFILE=<profile> CATALOG=<catalog> SCHEMA=<schema> WAREHOUSE=<warehouse_id> \
+  governance/apply.sh
+```
+
+Evidence: [docs/evidence/unity-catalog-governance.md](docs/evidence/unity-catalog-governance.md).
+Note: persona GRANTs require account-level groups (production pattern in
+[governance/grants.sql](governance/grants.sql)); the mask + row-filter enforcement does not
+depend on them.
 
 ## Evidence of execution
 

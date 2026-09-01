@@ -31,8 +31,26 @@ _MONTH_NUM = F.from_unixtime(
 @dp.expect("has_guests", "(adults + children + babies) > 0")
 @dp.expect("clean_parse", "_rescued_data IS NULL")
 def silver_bookings():
+    src = spark.readStream.table("bronze_bookings")  # noqa: F821
+    # Deterministic content-based surrogate key over the source business columns
+    # (excludes Auto Loader metadata). Streaming-safe and reproducible across a full
+    # refresh, unlike monotonically_increasing_id(). Keys downstream ML predictions and
+    # Lakebase serving rows. Informational PK (NOT ENFORCED): exact-duplicate bookings
+    # share an id by design.
+    _business_cols = [c for c in src.columns if not c.startswith("_")]
     return (
-        spark.readStream.table("bronze_bookings")  # noqa: F821
+        src
+        .withColumn(
+            "reservation_id",
+            F.sha2(
+                F.concat_ws("||", *[F.col(c).cast("string") for c in _business_cols]),
+                256,
+            ),
+        )
+        # agent/company are categorical identifiers, not measures. Cast to STRING so the
+        # governance mask_pii(STRING) function type-matches when applied.
+        .withColumn("agent", F.col("agent").cast("string"))
+        .withColumn("company", F.col("company").cast("string"))
         .withColumn("is_canceled", F.col("is_canceled").cast("boolean"))
         .withColumn("lead_time", F.col("lead_time").cast("int"))
         .withColumn("arrival_year", F.col("arrival_date_year").cast("int"))
