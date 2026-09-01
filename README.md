@@ -100,12 +100,26 @@ design: [docs/superpowers/specs/2026-09-01-unity-catalog-governance-design.md](d
 - Column-level data dictionary, `hb_data_class` (pii/financial) + `layer`/`certified` tags,
   and automatic bronze -> silver -> gold lineage.
 
+Two interchangeable runners share the same `governance/*.sql`:
+
 ```bash
+# Local / CLI runner (needs a SQL warehouse):
 PROFILE=<profile> CATALOG=<catalog> SCHEMA=<schema> WAREHOUSE=<warehouse_id> \
   governance/apply.sh
+
+# Re-runnable bundle job (serverless notebook, no warehouse) — for later re-runs:
+databricks bundle deploy -t dev -p <profile>
+databricks bundle run hotel_booking_governance -t dev -p <profile>
 ```
 
-Evidence: [docs/evidence/unity-catalog-governance.md](docs/evidence/unity-catalog-governance.md).
+The `hotel_booking_governance` job runs
+[src/hotel_booking_ingest/governance/apply_governance.py](src/hotel_booking_ingest/governance/apply_governance.py),
+a serverless port of `apply.sh` that creates the persona groups, probes the membership
+function, and re-applies the bundled `governance/*.sql` idempotently. Full design:
+[docs/superpowers/specs/2026-09-01-governance-dab-job-design.md](docs/superpowers/specs/2026-09-01-governance-dab-job-design.md).
+
+Evidence: [docs/evidence/unity-catalog-governance.md](docs/evidence/unity-catalog-governance.md),
+[docs/evidence/governance-dab-job-run.md](docs/evidence/governance-dab-job-run.md).
 Note: persona GRANTs require account-level groups (production pattern in
 [governance/grants.sql](governance/grants.sql)); the mask + row-filter enforcement does not
 depend on them.

@@ -1,0 +1,23 @@
+resources:
+  jobs:
+    hotel_booking_governance:
+      name: hotel_booking_governance
+      description: >-
+        Re-applies the Unity Catalog governance layer (persona groups, column masks,
+        row filters, tags, data dictionary, grants) for the hotel booking demo. Idempotent
+        serverless port of governance/apply.sh. Run on demand:
+        `databricks bundle run hotel_booking_governance -t dev`.
+      tasks:
+        - task_key: apply_governance
+          notebook_task:
+            notebook_path: ../src/hotel_booking_ingest/governance/apply_governance.py
+            base_parameters:
+              catalog: ${var.catalog}
+              schema: ${var.schema}
+              # governance/*.sql are synced with the bundle; the notebook reads them here.
+              governance_path: ${workspace.file_path}/governance
+          environment_key: default
+      environments:
+        - environment_key: default
+          spec:
+            client: "3"
