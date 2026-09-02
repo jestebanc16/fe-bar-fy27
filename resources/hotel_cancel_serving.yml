@@ -1,0 +1,21 @@
+resources:
+  model_serving_endpoints:
+    hotel_cancel_serving:
+      name: hotel-cancel-classifier
+      config:
+        served_entities:
+          # Bundles require a numeric entity_version (aliases can't be referenced in YAML).
+          # Resolve @champion -> version at deploy time and pass it in, e.g.:
+          #   V=$(databricks model-versions get-by-alias \
+          #         ${var.catalog}.${var.schema}.hotel_cancel_classifier champion \
+          #         -p <profile> -o json | python3 -c 'import sys,json;print(json.load(sys.stdin)["version"])')
+          #   databricks bundle deploy -t dev -p <profile> --var="cancel_model_version=$V"
+          - name: cancel-champion
+            entity_name: ${var.catalog}.${var.schema}.hotel_cancel_classifier
+            entity_version: ${var.cancel_model_version}
+            workload_size: Small
+            scale_to_zero_enabled: true
+        traffic_config:
+          routes:
+            - served_model_name: cancel-champion
+              traffic_percentage: 100

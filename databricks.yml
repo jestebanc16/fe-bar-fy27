@@ -9,6 +9,11 @@ variables:
     description: Unity Catalog catalog the medallion tables are written to.
   schema:
     description: Schema (within the catalog) for bronze/silver/gold tables and the raw Volume.
+  cancel_model_version:
+    description: >-
+      Numeric UC model version served by the hotel-cancel-classifier endpoint. Resolve from
+      the @champion alias at deploy time (see resources/hotel_cancel_serving.yml).
+    default: "1"
 
 targets:
   dev:

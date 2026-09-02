@@ -30,7 +30,7 @@ Lead with the buyer's numbers:
 |-------|-----------|--------------|
 | **Ingest** | Lakeflow | Land raw bookings into the Lakehouse (bronze), incrementally |
 | **Govern** | Unity Catalog | Personas + column masks (country/agent/company), per-property row-level security, data dictionary, classification tags, lineage |
-| **Make it intelligent** | ML (+ optional GenAI) | Cancellation-probability classifier; MLflow tracking, UC-registered model, serving endpoint. Optional: LLM-generated recommended action per flagged reservation |
+| **Make it intelligent** | ML | Cancellation-probability classifier (sklearn/HistGradientBoosting) on `silver_bookings`; MLflow tracking, UC-registered `hotel_cancel_classifier@champion`, batch `reservation_risk` table + real-time serving endpoint |
 | **Serve operationally** | Lakebase | Low-latency store of per-reservation risk scores + recommended actions for the app |
 | **Make it queryable** | Genie Room | Natural-language analytics: "expected cancellation rate for December?", "occupancy forecast next month?" |
 | **Surface to the business** | Databricks App | Revenue-manager view: at-risk reservations, occupancy impact, recommended actions |
@@ -123,6 +123,36 @@ Evidence: [docs/evidence/unity-catalog-governance.md](docs/evidence/unity-catalo
 Note: persona GRANTs require account-level groups (production pattern in
 [governance/grants.sql](governance/grants.sql)); the mask + row-filter enforcement does not
 depend on them.
+
+## Cancellation-probability model
+
+The ML slice trains a cancellation classifier on the governed `silver_bookings` table,
+registers it to Unity Catalog, batch-scores every reservation, and serves it in real time.
+Full design: [docs/superpowers/specs/2026-09-02-ml-cancel-classifier-design.md](docs/superpowers/specs/2026-09-02-ml-cancel-classifier-design.md).
+
+- Model: sklearn `HistGradientBoostingClassifier` in an one-hot + numeric `Pipeline`,
+  trained with an honest **temporal** split (test = latest arrivals). Tracked in MLflow
+  (ROC-AUC, PR-AUC, precision/recall/F1, confusion matrix, feature importance) and
+  registered as `${catalog}.${schema}.hotel_cancel_classifier@champion`.
+- Target-leakage columns (`reservation_status`/`_date`, `est_lost_revenue`) are dropped.
+- Batch scoring writes `${catalog}.${schema}.reservation_risk` (`reservation_id`,
+  `cancel_probability`, `risk_band`) - the source for Lakebase + the app.
+- A scale-to-zero Model Serving endpoint (`hotel-cancel-classifier`) serves `@champion`.
+
+```bash
+# Train + register @champion, then batch-score reservation_risk:
+databricks bundle run hotel_cancel_train -t dev -p <profile>
+databricks bundle run hotel_cancel_score -t dev -p <profile>
+
+# Deploy the serving endpoint (resolve @champion -> version, pass it in):
+V=$(databricks model-versions get-by-alias \
+      <catalog>.<schema>.hotel_cancel_classifier champion -p <profile> -o json \
+      | python3 -c 'import sys,json;print(json.load(sys.stdin)["version"])')
+databricks bundle deploy -t dev -p <profile> --var="cancel_model_version=$V"
+```
+
+Evidence: [docs/evidence/ml-cancel-classifier-run.md](docs/evidence/ml-cancel-classifier-run.md)
+(dev run: ROC-AUC 0.84, 26.8K bookings flagged high-risk, live endpoint prediction).
 
 ## Evidence of execution
 
