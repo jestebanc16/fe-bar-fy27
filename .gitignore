@@ -9,3 +9,6 @@ data/*.zip
 
 # macOS
 .DS_Store
+
+# Editor-local config (Databricks VS Code extension notebook settings, etc.)
+.vscode/
