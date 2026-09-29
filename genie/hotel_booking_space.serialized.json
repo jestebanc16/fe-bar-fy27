@@ -113,9 +113,10 @@
           "GRAIN & JOINS\n",
           "- gold_hotel_month is the time-series table: one row per hotel x arrival month\n",
           "  (use arrival_year + arrival_month, or arrival_month_start).\n",
-          "- reservation_risk is per-reservation and has NO date column. Risk questions\n",
-          "  are aggregate / hotel-level (e.g. counts per risk_band per hotel), not\n",
-          "  time-series. Do not attempt to trend risk over time.\n",
+          "- reservation_risk is per-reservation and has no arrival/business date to\n",
+          "  trend by - only a scored_at scoring timestamp (a single batch for\n",
+          "  model_version 1). Risk questions are aggregate / hotel-level (e.g. counts\n",
+          "  per risk_band per hotel), not an arrival-time series.\n",
           "- hotel values (\"City Hotel\", \"Resort Hotel\") are shared across both tables.\n",
           "\n",
           "HONEST LIMITS\n",
@@ -124,7 +125,7 @@
           "  explain the limitation and offer the closest supported metric (cancel_rate,\n",
           "  room_nights proxy, est_lost_revenue).\n"
         ],
-        "id": "01f1bc5126ff1713be2f2b5200f43b8a"
+        "id": "01f1bc52e4c81f26b5e8c05ffb889427"
       }
     ]
   },
