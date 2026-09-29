@@ -213,6 +213,9 @@ Rebuild (idempotent):
 # 1. Load + validate the config
 python genie/build_space.py
 # 2. Create or update the space (manage_genie create_or_update — idempotent)
+#    Fallback: if the MCP create path fails (invalid-token/stale-client), POST the
+#    identical payload via the CLI: databricks api post /api/2.0/data-rooms/
+#    (see docs/evidence/genie-space-run.md)
 # 3. Add instructions + curated SQL in the Genie UI (not exposed by create_or_update)
 # 4. Export the space (manage_genie export) and commit the serialized lockfile
 ```
@@ -236,7 +239,7 @@ The build must be **readable as text**. Commit:
 
 ## Deliverables
 
-- [ ] The build (code, notebooks with outputs, app, Genie room ✅)
+- [ ] The build (code, notebooks with outputs, app, Genie room) (Genie room done)
 - [ ] Evidence of execution committed as text
 - [ ] Presentation deck — leads with business outcome, quantifies impact in RevPAR / occupancy / lost-revenue terms
 

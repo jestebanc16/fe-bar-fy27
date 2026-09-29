@@ -9,6 +9,10 @@ general instructions + curated SQL examples are applied in the Genie UI (the
 create_or_update surface does not expose them) then captured by
 `manage_genie action=export` into hotel_booking_space.serialized.json.
 
+If the MCP create path fails with an invalid-token / stale-client error, the identical
+payload can be POSTed via the Databricks CLI (`databricks api post /api/2.0/data-rooms/`);
+see docs/evidence/genie-space-run.md for the recorded fallback.
+
 Usage:
     python genie/build_space.py [--config genie/hotel_booking_space.yaml]
 """
@@ -27,6 +31,8 @@ REQUIRED_KEYS = ("display_name", "table_identifiers", "description", "sample_que
 
 def load_config(path: pathlib.Path) -> dict:
     cfg = yaml.safe_load(path.read_text())
+    if not isinstance(cfg, dict):
+        raise SystemExit("config must be a YAML mapping")
     missing = [k for k in REQUIRED_KEYS if not cfg.get(k)]
     if missing:
         raise SystemExit(f"config missing required keys: {missing}")
@@ -34,6 +40,8 @@ def load_config(path: pathlib.Path) -> dict:
     if not isinstance(tables, list) or not tables:
         raise SystemExit("table_identifiers must be a non-empty list")
     for t in tables:
+        if not isinstance(t, str):
+            raise SystemExit(f"table identifier must be a string: {t!r}")
         if t.count(".") != 2:
             raise SystemExit(f"table identifier not fully qualified (catalog.schema.table): {t}")
     return cfg

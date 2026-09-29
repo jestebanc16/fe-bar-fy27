@@ -45,9 +45,10 @@ instructions: |
   GRAIN & JOINS
   - gold_hotel_month is the time-series table: one row per hotel x arrival month
     (use arrival_year + arrival_month, or arrival_month_start).
-  - reservation_risk is per-reservation and has NO date column. Risk questions
-    are aggregate / hotel-level (e.g. counts per risk_band per hotel), not
-    time-series. Do not attempt to trend risk over time.
+  - reservation_risk is per-reservation and has no arrival/business date to
+    trend by - only a scored_at scoring timestamp (a single batch for
+    model_version 1). Risk questions are aggregate / hotel-level (e.g. counts
+    per risk_band per hotel), not an arrival-time series.
   - hotel values ("City Hotel", "Resort Hotel") are shared across both tables.
 
   HONEST LIMITS
