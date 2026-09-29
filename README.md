@@ -189,6 +189,42 @@ Note: the serverless job env pins `databricks-sdk>=0.143.0` for the Lakebase `w.
 and the optional UC-catalog registration of the Postgres DB is omitted because it requires the
 metastore `CREATE CATALOG` privilege (see the evidence doc). Consequently the reservation_action write-back table is queryable only over Postgres (psql / the app), not from Databricks SQL, until CREATE CATALOG is granted.
 
+## Genie — natural-language analytics
+
+The Genie slice exposes the gold analytics tables as a natural-language space so revenue
+managers can ask cancellation questions in plain English. The live dev space is
+**"Hotel Booking Cancellation Intelligence"** (`space_id` `01f1bc510bc211139339758ac42c1d1a`)
+in workspace `fevm-fe-bar-ecastillo` (`warehouse_id` `94dfd610249e30f5`).
+
+- Tables exposed: `fe_bar_ecastillo_catalog.hotel_booking_dev.gold_hotel_month` (hotel x month
+  cancel rate, ADR, estimated lost revenue) and `.reservation_risk` (per-reservation
+  cancellation probability + risk band).
+- Genie is **not** a Databricks Asset Bundle resource, so this slice lives under `genie/`
+  (outside `resources/`) and is managed via the Genie API / `manage_genie` MCP tool. Artifacts:
+  - `genie/hotel_booking_space.yaml` — source of truth (description, instructions, curated SQL,
+    sample questions).
+  - `genie/hotel_booking_space.serialized.json` — export lockfile for reproducibility/migration.
+  - `genie/build_space.py` — config loader/validator.
+  - `docs/evidence/genie-space-run.md` — `ask_genie` verification with a direct-SQL spot-check.
+
+Rebuild (idempotent):
+
+```bash
+# 1. Load + validate the config
+python genie/build_space.py
+# 2. Create or update the space (manage_genie create_or_update — idempotent)
+# 3. Add instructions + curated SQL in the Genie UI (not exposed by create_or_update)
+# 4. Export the space (manage_genie export) and commit the serialized lockfile
+```
+
+Query the space via `ask_genie(space_id="01f1bc510bc211139339758ac42c1d1a", question=...)` or the
+Genie Conversation API. To migrate to another workspace, re-import the serialized lockfile
+(`manage_genie import`), remapping the catalog for a future prod space.
+
+Note: this is a single dev space. Honest limits — no occupancy/RevPAR (room inventory not in the
+dataset); `reservation_risk` has no per-reservation arrival date, so risk answers are
+aggregate/hotel-level, not time-series.
+
 ## Evidence of execution
 
 The build must be **readable as text**. Commit:
@@ -200,7 +236,7 @@ The build must be **readable as text**. Commit:
 
 ## Deliverables
 
-- [ ] The build (code, notebooks with outputs, app, Genie room)
+- [ ] The build (code, notebooks with outputs, app, Genie room ✅)
 - [ ] Evidence of execution committed as text
 - [ ] Presentation deck — leads with business outcome, quantifies impact in RevPAR / occupancy / lost-revenue terms
 
