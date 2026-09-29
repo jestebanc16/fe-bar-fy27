@@ -1,0 +1,132 @@
+{
+  "config": {
+    "sample_questions": [
+      {
+        "id": "01f1bc51264d15b6a0576409f3d24a19",
+        "question": [
+          "What was the cancellation rate for City Hotel by month in 2016?"
+        ]
+      },
+      {
+        "id": "01f1bc51264d1fcba5b14c97aa116844",
+        "question": [
+          "Which arrival month had the highest estimated lost revenue?"
+        ]
+      },
+      {
+        "id": "01f1bc51264e1a2ebf21149c9e1cb3ce",
+        "question": [
+          "How many reservations are high risk per hotel?"
+        ]
+      },
+      {
+        "id": "01f1bc51264f1350b731432443378f08",
+        "question": [
+          "What's the average cancel probability by risk band?"
+        ]
+      },
+      {
+        "id": "01f1bc51264f1d01858a1a03ce630df5",
+        "question": [
+          "Compare the cancellation rate between the two hotels."
+        ]
+      },
+      {
+        "id": "01f1bc51265016c7a5437be5ac9e0e3c",
+        "question": [
+          "What model version produced the current risk scores?"
+        ]
+      }
+    ]
+  },
+  "data_sources": {
+    "tables": [
+      {
+        "identifier": "fe_bar_ecastillo_catalog.hotel_booking_dev.gold_hotel_month"
+      },
+      {
+        "identifier": "fe_bar_ecastillo_catalog.hotel_booking_dev.reservation_risk"
+      }
+    ]
+  },
+  "instructions": {
+    "example_question_sqls": [
+      {
+        "id": "01f1bc5127af172c9d9effea193f9b65",
+        "question": [
+          "Monthly cancel rate and lost revenue for a hotel"
+        ],
+        "sql": [
+          "SELECT arrival_year, arrival_month, cancel_rate, est_lost_revenue\n",
+          "FROM fe_bar_ecastillo_catalog.hotel_booking_dev.gold_hotel_month\n",
+          "WHERE hotel = 'City Hotel'\n",
+          "ORDER BY arrival_year, arrival_month"
+        ]
+      },
+      {
+        "id": "01f1bc51285c1bdeaa738242b696710d",
+        "question": [
+          "Risk-band distribution with average cancel probability"
+        ],
+        "sql": [
+          "SELECT risk_band,\n",
+          "       count(*) AS reservations,\n",
+          "       round(avg(cancel_probability), 4) AS avg_cancel_probability\n",
+          "FROM fe_bar_ecastillo_catalog.hotel_booking_dev.reservation_risk\n",
+          "GROUP BY risk_band\n",
+          "ORDER BY avg_cancel_probability DESC"
+        ]
+      },
+      {
+        "id": "01f1bc51290c14a09957c1f73a687e6f",
+        "question": [
+          "Top arrival months by estimated lost revenue"
+        ],
+        "sql": [
+          "SELECT hotel, arrival_year, arrival_month, est_lost_revenue\n",
+          "FROM fe_bar_ecastillo_catalog.hotel_booking_dev.gold_hotel_month\n",
+          "ORDER BY est_lost_revenue DESC\n",
+          "LIMIT 10"
+        ]
+      }
+    ],
+    "text_instructions": [
+      {
+        "content": [
+          "This space answers two kinds of questions about hotel booking cancellations.\n",
+          "\n",
+          "GLOSSARY\n",
+          "- cancel_rate (gold_hotel_month): share of bookings canceled, 0-1, already\n",
+          "  aggregated per hotel and arrival month. Do not re-average it across months\n",
+          "  without weighting by `bookings`.\n",
+          "- est_lost_revenue (gold_hotel_month): estimated revenue lost to\n",
+          "  cancellations (ADR x canceled room-night proxy). It is an estimate.\n",
+          "- room_nights / canceled_room_nights (gold_hotel_month): room-night proxies,\n",
+          "  not audited occupancy.\n",
+          "- cancel_probability (reservation_risk): model score 0-1 that a reservation\n",
+          "  cancels.\n",
+          "- risk_band (reservation_risk): high when cancel_probability >= 0.70, medium\n",
+          "  when >= 0.40, otherwise low.\n",
+          "- model_version (reservation_risk): the champion model version that produced\n",
+          "  the scores.\n",
+          "\n",
+          "GRAIN & JOINS\n",
+          "- gold_hotel_month is the time-series table: one row per hotel x arrival month\n",
+          "  (use arrival_year + arrival_month, or arrival_month_start).\n",
+          "- reservation_risk is per-reservation and has NO date column. Risk questions\n",
+          "  are aggregate / hotel-level (e.g. counts per risk_band per hotel), not\n",
+          "  time-series. Do not attempt to trend risk over time.\n",
+          "- hotel values (\"City Hotel\", \"Resort Hotel\") are shared across both tables.\n",
+          "\n",
+          "HONEST LIMITS\n",
+          "- True occupancy and RevPAR require room-inventory the dataset does not\n",
+          "  contain. Do NOT invent occupancy, availability, or RevPAR figures; if asked,\n",
+          "  explain the limitation and offer the closest supported metric (cancel_rate,\n",
+          "  room_nights proxy, est_lost_revenue).\n"
+        ],
+        "id": "01f1bc5126ff1713be2f2b5200f43b8a"
+      }
+    ]
+  },
+  "version": 2
+}
