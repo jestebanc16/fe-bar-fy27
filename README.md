@@ -157,6 +157,38 @@ databricks bundle deploy -t dev -p <profile> --var="cancel_model_version=$V"
 Evidence: [docs/evidence/ml-cancel-classifier-run.md](docs/evidence/ml-cancel-classifier-run.md)
 (dev run: ROC-AUC 0.84, 26.8K bookings flagged high-risk, live endpoint prediction).
 
+## Lakebase serving + write-back
+
+The Lakebase slice serves per-reservation risk from managed Postgres at low latency and gives
+the app an append-only place to record operational actions. Full design:
+[docs/superpowers/specs/2026-09-29-lakebase-serving-writeback-design.md](docs/superpowers/specs/2026-09-29-lakebase-serving-writeback-design.md).
+
+- A `CU_1` **Database Instance** (`hotel-lakebase`) hosts the logical Postgres DB `hotel`.
+- A serverless job `hotel_lakebase_sync` runs three tasks: `build_serving` (joins
+  `reservation_risk` + `silver_bookings` into the denormalized Delta table
+  `reservation_risk_serving`, deduped on `reservation_id`), `provision_writeback` (creates the
+  append-only `public.reservation_action` table over Postgres), and `refresh_sync` (triggers
+  the synced-table SNAPSHOT).
+- A **synced table** (`reservation_risk_serving_synced`, SNAPSHOT, PK `reservation_id`) mirrors
+  the Delta serving table into Postgres read-only; it is UC-queryable by name.
+
+Deploy is **two-phase** because the synced table reads its source schema at creation:
+
+```bash
+# Phase 1: synced table held out (move resources/hotel_lakebase_synced.yml aside), deploy + run
+databricks bundle deploy -t dev -p <profile>
+databricks bundle run hotel_lakebase_sync -t dev -p <profile>   # build + provision; refresh skips
+# Phase 2: restore resources/hotel_lakebase_synced.yml, deploy, re-run to refresh the SNAPSHOT
+databricks bundle deploy -t dev -p <profile>
+databricks bundle run hotel_lakebase_sync -t dev -p <profile>
+```
+
+Evidence: [docs/evidence/lakebase-serving-run.md](docs/evidence/lakebase-serving-run.md)
+(dev run: 87,395 rows served in Postgres, write-back insert/read verified via psql).
+Note: the serverless job env pins `databricks-sdk>=0.143.0` for the Lakebase `w.database` API,
+and the optional UC-catalog registration of the Postgres DB is omitted because it requires the
+metastore `CREATE CATALOG` privilege (see the evidence doc).
+
 ## Evidence of execution
 
 The build must be **readable as text**. Commit:
