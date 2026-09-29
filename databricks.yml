@@ -20,15 +20,15 @@ targets:
     mode: development
     default: true
     workspace:
-      host: https://fevm-serverless-stable-eojwo0.cloud.databricks.com
+      host: https://fevm-fe-bar-ecastillo.cloud.databricks.com
     variables:
-      catalog: serverless_stable_eojwo0_catalog
+      catalog: fe_bar_ecastillo_catalog
       schema: hotel_booking_dev
 
   prod:
     mode: production
     workspace:
-      host: https://fevm-serverless-stable-eojwo0.cloud.databricks.com
+      host: https://fevm-fe-bar-ecastillo.cloud.databricks.com
     variables:
-      catalog: serverless_stable_eojwo0_catalog
+      catalog: fe_bar_ecastillo_catalog
       schema: hotel_booking

@@ -3,10 +3,15 @@
 Trained, registered, batch-scored, and served the cancellation classifier on the
 `serverless_stable_eojwo0_catalog.hotel_booking_dev` schema.
 
-## 1. Train (`hotel_cancel_train`)
+Train and scoring are now a single chained job `hotel_cancel_ml` (`train` -> `score`); a
+single `databricks bundle run hotel_cancel_ml -t dev` performs the full refresh. The
+per-task results below were captured from that job (originally the two standalone jobs
+`hotel_cancel_train` / `hotel_cancel_score`, since consolidated).
+
+## 1. Train (`hotel_cancel_ml` task `train`)
 
 ```bash
-databricks bundle run hotel_cancel_train -t dev -p serverless_stable_eojwo0
+databricks bundle run hotel_cancel_ml -t dev -p serverless_stable_eojwo0
 ```
 
 `TERMINATED SUCCESS`. Notebook exit summary:
@@ -33,10 +38,11 @@ databricks bundle run hotel_cancel_train -t dev -p serverless_stable_eojwo0
   `confusion_matrix.png`, `roc_pr_curves.png`, `feature_importance.png`.
 - Registered to UC `hotel_cancel_classifier` v1 and aliased `@champion`.
 
-## 2. Batch score (`hotel_cancel_score`)
+## 2. Batch score (`hotel_cancel_ml` task `score`, depends on `train`)
 
 ```bash
-databricks bundle run hotel_cancel_score -t dev -p serverless_stable_eojwo0
+# Runs automatically after `train` succeeds within hotel_cancel_ml.
+databricks bundle run hotel_cancel_ml -t dev -p serverless_stable_eojwo0
 ```
 
 `TERMINATED SUCCESS`. Notebook exit: `{"target": "...reservation_risk", "rows": 119389,
@@ -94,3 +100,23 @@ databricks bundle deploy -t dev -p serverless_stable_eojwo0 --var="cancel_model_
 
 This is an environmental artifact (the ACL flap), not a bundle-config issue; the endpoint
 itself is READY and serving.
+
+## Workspace migration (fevm-fe-bar-ecastillo)
+
+The full stack was re-deployed to a new workspace
+`https://fevm-fe-bar-ecastillo.cloud.databricks.com` on
+`fe_bar_ecastillo_catalog.hotel_booking_dev` (profile `fevm-fe-bar-ecastillo`). This was a
+clean deploy - no terraform state drift this time - so the reconcile steps above did not
+apply.
+
+- **Ingest**: `hotel_booking_ingest_etl` re-run - bronze 119,390 / silver 119,389 / gold 52.
+- **Governance**: `hotel_booking_governance` re-run - 38 OK / 36 expected FAIL (11 gold-MV
+  column comments `EXPECT_TABLE_NOT_VIEW`, 25 grants `PRINCIPAL_DOES_NOT_EXIST`).
+- **ML** (`hotel_cancel_ml`, `TERMINATED SUCCESS`):
+  - `train`: `hotel_cancel_classifier` v1 `@champion`, ROC-AUC 0.8384, PR-AUC 0.8083,
+    precision 0.757, recall 0.6016, F1 0.6704 (`run_id 2856fa95239d4b6091ef83a26d2271ff`).
+  - `score`: `reservation_risk` 119,389 rows, `model_version 1`.
+- **Serve**: `dev_esteban_castillo_hotel-cancel-classifier` deployed with
+  `--var cancel_model_version=1`, `{"ready": "READY"}`. Sample query returns
+  `{"predictions": [0]}` for a low-risk transient booking. The signature expects the derived
+  features `arrival_year` and `stay_nights` (not the raw `arrival_date_*` columns).

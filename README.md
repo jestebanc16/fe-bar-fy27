@@ -139,10 +139,13 @@ Full design: [docs/superpowers/specs/2026-09-02-ml-cancel-classifier-design.md](
   `cancel_probability`, `risk_band`) - the source for Lakebase + the app.
 - A scale-to-zero Model Serving endpoint (`hotel-cancel-classifier`) serves `@champion`.
 
+Train and scoring are one chained job (`hotel_cancel_ml`: `train` -> `score`), so the whole
+model refresh runs from a single command. Full chained-job design:
+[docs/superpowers/specs/2026-09-02-ml-chained-job-design.md](docs/superpowers/specs/2026-09-02-ml-chained-job-design.md).
+
 ```bash
-# Train + register @champion, then batch-score reservation_risk:
-databricks bundle run hotel_cancel_train -t dev -p <profile>
-databricks bundle run hotel_cancel_score -t dev -p <profile>
+# Refresh the model + reservation_risk in one run (train -> score, chained):
+databricks bundle run hotel_cancel_ml -t dev -p <profile>
 
 # Deploy the serving endpoint (resolve @champion -> version, pass it in):
 V=$(databricks model-versions get-by-alias \

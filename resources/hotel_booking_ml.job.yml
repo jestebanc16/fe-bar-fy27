@@ -1,11 +1,11 @@
 resources:
   jobs:
-    hotel_cancel_train:
-      name: hotel_cancel_train
+    hotel_cancel_ml:
+      name: hotel_cancel_ml
       description: >-
-        Train the cancellation-probability classifier on silver_bookings, track metrics in
-        MLflow, and register hotel_cancel_classifier@champion to Unity Catalog. Run:
-        `databricks bundle run hotel_cancel_train -t dev`.
+        End-to-end cancellation-model refresh: train + register
+        hotel_cancel_classifier@champion, then batch-score reservation_risk. Run:
+        `databricks bundle run hotel_cancel_ml -t dev`.
       tasks:
         - task_key: train
           notebook_task:
@@ -14,19 +14,9 @@ resources:
               catalog: ${var.catalog}
               schema: ${var.schema}
           environment_key: default
-      environments:
-        - environment_key: default
-          spec:
-            client: "3"
-
-    hotel_cancel_score:
-      name: hotel_cancel_score
-      description: >-
-        Batch-score every reservation with hotel_cancel_classifier@champion and write the
-        reservation_risk table (source for Lakebase + the app). Run:
-        `databricks bundle run hotel_cancel_score -t dev`.
-      tasks:
         - task_key: score
+          depends_on:
+            - task_key: train
           notebook_task:
             notebook_path: ../src/hotel_booking_ml/score_bookings.py
             base_parameters:
