@@ -45,4 +45,7 @@ resources:
             client: "3"
             dependencies:
               - psycopg2-binary
-              - databricks-sdk
+              # Pin a floor that includes the Lakebase `w.database` API; the
+              # serverless base image ships an older SDK and an unpinned
+              # dependency will not force an upgrade.
+              - databricks-sdk>=0.143.0
