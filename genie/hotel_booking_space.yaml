@@ -1,0 +1,87 @@
+# Genie space: Hotel Booking Cancellation Intelligence (dev)
+# Source-of-truth config. Genie is not a bundle resource; see
+# docs/superpowers/specs/2026-09-29-genie-nl-analytics-design.md.
+#
+# `display_name`, `table_identifiers`, `description`, `sample_questions`, and
+# `warehouse_id` are applied via `manage_genie action=create_or_update`.
+# `instructions` and `curated_sql` are applied in the Genie UI (the MCP
+# create_or_update surface does not expose them), then captured by
+# `manage_genie action=export` into hotel_booking_space.serialized.json.
+
+display_name: "Hotel Booking Cancellation Intelligence"
+
+# null => manage_genie auto-detects a running SQL warehouse; the resolved id is
+# recorded in the evidence doc. Set an explicit id here if auto-detect fails.
+warehouse_id: null
+
+table_identifiers:
+  - "fe_bar_ecastillo_catalog.hotel_booking_dev.gold_hotel_month"
+  - "fe_bar_ecastillo_catalog.hotel_booking_dev.reservation_risk"
+
+description: >-
+  Natural-language analytics for hotel booking cancellations. Monthly
+  revenue-management KPIs (cancellation rate, average ADR, estimated lost
+  revenue) come from gold_hotel_month; forward-looking ML cancellation risk
+  (cancel_probability, risk_band) comes from reservation_risk.
+
+instructions: |
+  This space answers two kinds of questions about hotel booking cancellations.
+
+  GLOSSARY
+  - cancel_rate (gold_hotel_month): share of bookings canceled, 0-1, already
+    aggregated per hotel and arrival month. Do not re-average it across months
+    without weighting by `bookings`.
+  - est_lost_revenue (gold_hotel_month): estimated revenue lost to
+    cancellations (ADR x canceled room-night proxy). It is an estimate.
+  - room_nights / canceled_room_nights (gold_hotel_month): room-night proxies,
+    not audited occupancy.
+  - cancel_probability (reservation_risk): model score 0-1 that a reservation
+    cancels.
+  - risk_band (reservation_risk): high when cancel_probability >= 0.70, medium
+    when >= 0.40, otherwise low.
+  - model_version (reservation_risk): the champion model version that produced
+    the scores.
+
+  GRAIN & JOINS
+  - gold_hotel_month is the time-series table: one row per hotel x arrival month
+    (use arrival_year + arrival_month, or arrival_month_start).
+  - reservation_risk is per-reservation and has NO date column. Risk questions
+    are aggregate / hotel-level (e.g. counts per risk_band per hotel), not
+    time-series. Do not attempt to trend risk over time.
+  - hotel values ("City Hotel", "Resort Hotel") are shared across both tables.
+
+  HONEST LIMITS
+  - True occupancy and RevPAR require room-inventory the dataset does not
+    contain. Do NOT invent occupancy, availability, or RevPAR figures; if asked,
+    explain the limitation and offer the closest supported metric (cancel_rate,
+    room_nights proxy, est_lost_revenue).
+
+curated_sql:
+  - title: "Monthly cancel rate and lost revenue for a hotel"
+    sql: |
+      SELECT arrival_year, arrival_month, cancel_rate, est_lost_revenue
+      FROM fe_bar_ecastillo_catalog.hotel_booking_dev.gold_hotel_month
+      WHERE hotel = 'City Hotel'
+      ORDER BY arrival_year, arrival_month
+  - title: "Risk-band distribution with average cancel probability"
+    sql: |
+      SELECT risk_band,
+             count(*) AS reservations,
+             round(avg(cancel_probability), 4) AS avg_cancel_probability
+      FROM fe_bar_ecastillo_catalog.hotel_booking_dev.reservation_risk
+      GROUP BY risk_band
+      ORDER BY avg_cancel_probability DESC
+  - title: "Top arrival months by estimated lost revenue"
+    sql: |
+      SELECT hotel, arrival_year, arrival_month, est_lost_revenue
+      FROM fe_bar_ecastillo_catalog.hotel_booking_dev.gold_hotel_month
+      ORDER BY est_lost_revenue DESC
+      LIMIT 10
+
+sample_questions:
+  - "What was the cancellation rate for City Hotel by month in 2016?"
+  - "Which arrival month had the highest estimated lost revenue?"
+  - "How many reservations are high risk per hotel?"
+  - "What's the average cancel probability by risk band?"
+  - "Compare the cancellation rate between the two hotels."
+  - "What model version produced the current risk scores?"
