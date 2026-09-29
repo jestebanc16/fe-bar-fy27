@@ -18,6 +18,7 @@ assert INSTANCE and DATABASE, "instance_name and database parameters are require
 
 import uuid
 import psycopg2
+from psycopg2 import sql
 from databricks.sdk import WorkspaceClient
 
 w = WorkspaceClient()
@@ -33,51 +34,47 @@ print(f"host={host} user={user}")
 # COMMAND ----------
 
 # Create the logical database if missing (CREATE DATABASE cannot run in a txn).
-conn = psycopg2.connect(
+with psycopg2.connect(
     host=host, port=5432, dbname="databricks_postgres",
     user=user, password=token, sslmode="require",
-)
-conn.autocommit = True
-cur = conn.cursor()
-cur.execute("SELECT 1 FROM pg_database WHERE datname = %s", (DATABASE,))
-if cur.fetchone() is None:
-    cur.execute(f'CREATE DATABASE "{DATABASE}"')
-    print(f"created database {DATABASE}")
-else:
-    print(f"database {DATABASE} already exists")
-cur.close()
-conn.close()
+) as conn:
+    conn.autocommit = True
+    with conn.cursor() as cur:
+        cur.execute("SELECT 1 FROM pg_database WHERE datname = %s", (DATABASE,))
+        if cur.fetchone() is None:
+            cur.execute(sql.SQL("CREATE DATABASE {}").format(sql.Identifier(DATABASE)))
+            print(f"created database {DATABASE}")
+        else:
+            print(f"database {DATABASE} already exists")
 
 # COMMAND ----------
 
 # Create the append-only write-back table in the hotel database.
-conn = psycopg2.connect(
+with psycopg2.connect(
     host=host, port=5432, dbname=DATABASE,
     user=user, password=token, sslmode="require",
-)
-conn.autocommit = True
-cur = conn.cursor()
-cur.execute(
-    """
-    CREATE TABLE IF NOT EXISTS public.reservation_action (
-        id             BIGSERIAL PRIMARY KEY,
-        reservation_id TEXT NOT NULL,
-        action_type    TEXT NOT NULL
-                       CHECK (action_type IN
-                         ('reconfirmed','deposit_requested','overbooked_backup',
-                          'released','note')),
-        note           TEXT,
-        acted_by       TEXT,
-        acted_at       TIMESTAMPTZ NOT NULL DEFAULT now()
-    );
-    """
-)
-cur.execute(
-    "CREATE INDEX IF NOT EXISTS ix_reservation_action_res "
-    "ON public.reservation_action (reservation_id, acted_at DESC);"
-)
-cur.close()
-conn.close()
+) as conn:
+    conn.autocommit = True
+    with conn.cursor() as cur:
+        cur.execute(
+            """
+            CREATE TABLE IF NOT EXISTS public.reservation_action (
+                id             BIGSERIAL PRIMARY KEY,
+                reservation_id TEXT NOT NULL,
+                action_type    TEXT NOT NULL
+                               CHECK (action_type IN
+                                 ('reconfirmed','deposit_requested','overbooked_backup',
+                                  'released','note')),
+                note           TEXT,
+                acted_by       TEXT,
+                acted_at       TIMESTAMPTZ NOT NULL DEFAULT now()
+            );
+            """
+        )
+        cur.execute(
+            "CREATE INDEX IF NOT EXISTS ix_reservation_action_res "
+            "ON public.reservation_action (reservation_id, acted_at DESC);"
+        )
 
 dbutils.notebook.exit(
     __import__("json").dumps({"database": DATABASE, "writeback_ready": True})

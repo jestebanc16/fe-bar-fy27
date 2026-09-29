@@ -187,7 +187,7 @@ Evidence: [docs/evidence/lakebase-serving-run.md](docs/evidence/lakebase-serving
 (dev run: 87,395 rows served in Postgres, write-back insert/read verified via psql).
 Note: the serverless job env pins `databricks-sdk>=0.143.0` for the Lakebase `w.database` API,
 and the optional UC-catalog registration of the Postgres DB is omitted because it requires the
-metastore `CREATE CATALOG` privilege (see the evidence doc).
+metastore `CREATE CATALOG` privilege (see the evidence doc). Consequently the reservation_action write-back table is queryable only over Postgres (psql / the app), not from Databricks SQL, until CREATE CATALOG is granted.
 
 ## Evidence of execution
 

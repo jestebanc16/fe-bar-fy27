@@ -29,7 +29,13 @@ except NotFound:
         json.dumps({"synced_table": SYNCED, "sync_state": "SKIPPED_NOT_FOUND"})
     )
 
-pipeline_id = st.data_synchronization_status.pipeline_id
+status = st.data_synchronization_status
+if status is None or not getattr(status, "pipeline_id", None):
+    print(f"synced table {SYNCED} has no pipeline yet - skipping (still provisioning)")
+    dbutils.notebook.exit(
+        json.dumps({"synced_table": SYNCED, "sync_state": "SKIPPED_NOT_READY"})
+    )
+pipeline_id = status.pipeline_id
 print(f"synced table pipeline_id={pipeline_id}")
 
 # COMMAND ----------
