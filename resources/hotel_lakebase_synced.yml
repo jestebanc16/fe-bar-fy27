@@ -14,9 +14,16 @@ resources:
           storage_catalog: ${var.catalog}
           storage_schema: ${var.schema}
 
-  database_catalogs:
-    hotel_lakebase_pg:
-      name: hotel_lakebase_pg
-      database_instance_name: ${resources.database_instances.hotel_lakebase.name}
-      database_name: hotel
-      create_database_if_not_exists: true
+# NOTE: A `database_catalogs.hotel_lakebase_pg` resource (registering the Lakebase
+# `hotel` Postgres DB as a UC catalog) was intentionally removed: creating a UC catalog
+# requires the metastore-level CREATE CATALOG privilege, which the run-as identity lacks
+# on this FEVM workspace (workspace admin != metastore admin). The synced read table above
+# is already registered under the existing catalog/schema and is UC-queryable by name; the
+# native `reservation_action` write-back table is accessed directly over Postgres (psql /
+# the app's DB connection). Re-add this block if CREATE CATALOG is later granted:
+#   database_catalogs:
+#     hotel_lakebase_pg:
+#       name: hotel_lakebase_pg
+#       database_instance_name: ${resources.database_instances.hotel_lakebase.name}
+#       database_name: hotel
+#       create_database_if_not_exists: true
