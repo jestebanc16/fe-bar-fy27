@@ -1,0 +1,21 @@
+@import "tailwindcss";
+
+/* Tailwind v4 class-based dark mode: `.dark` on <html> toggles dark: variants. */
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* Custom risk colors -> bg-risk-high / text-risk-medium / etc. */
+@theme {
+  --color-risk-high: #dc2626;
+  --color-risk-medium: #d97706;
+  --color-risk-low: #16a34a;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  @apply bg-slate-50 text-slate-900 antialiased dark:bg-slate-950 dark:text-slate-100;
+}
