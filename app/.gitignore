@@ -10,6 +10,10 @@ node_modules/
 npm-debug.log*
 
 # Build outputs — KEEP frontend/dist (needed for deploy); do NOT ignore it.
+# TS build/incremental artifacts emitted by `tsc -b` (not source)
+*.tsbuildinfo
+frontend/vite.config.js
+frontend/vite.config.d.ts
 
 # Databricks / IDE / OS
 .databricks/
