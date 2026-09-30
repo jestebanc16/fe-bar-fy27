@@ -1,0 +1,22 @@
+[project]
+name = "hotel-revenue-app"
+version = "0.1.0"
+description = "Revenue-manager app: at-risk reservations + write-back actions over Lakebase."
+requires-python = ">=3.11"
+dependencies = [
+    "fastapi>=0.111",
+    "uvicorn>=0.30",
+    "psycopg[binary,pool]>=3.2",
+    "databricks-sdk>=0.143.0",
+    "pydantic>=2.7",
+]
+
+[dependency-groups]
+dev = ["pytest>=8"]
+
+[tool.pytest.ini_options]
+pythonpath = ["."]
+testpaths = ["tests"]
+
+[tool.uv]
+package = false
