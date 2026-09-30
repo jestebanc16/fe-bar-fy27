@@ -1,0 +1,14 @@
+resources:
+  apps:
+    hotel_revenue_app:
+      name: hotel-revenue-app
+      description: >-
+        Revenue-manager app: triage at-risk reservations from the Lakebase serving
+        layer and record operational actions (write-back to public.reservation_action).
+      source_code_path: ../app
+      resources:
+        - name: lakebase
+          database:
+            instance_name: hotel-lakebase
+            database_name: hotel
+            permission: CAN_CONNECT_AND_CREATE

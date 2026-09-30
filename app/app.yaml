@@ -1,0 +1,18 @@
+# Databricks App runtime config. The `database` resource declared in
+# resources/hotel_app.yml injects PGHOST/PGUSER/PGPORT/PGDATABASE at runtime;
+# DATABRICKS_INSTANCE_NAME + PGDATABASE below back the db.py fallback path.
+command:
+  - "python"
+  - "-m"
+  - "uvicorn"
+  - "app:app"
+  - "--host"
+  - "0.0.0.0"
+  - "--port"
+  - "8000"
+
+env:
+  - name: DATABRICKS_INSTANCE_NAME
+    value: "hotel-lakebase"
+  - name: PGDATABASE
+    value: "hotel"
