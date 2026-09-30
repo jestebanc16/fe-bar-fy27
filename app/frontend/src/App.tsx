@@ -4,6 +4,7 @@ import Header from "./components/Header";
 import KpiCards from "./components/KpiCards";
 import FilterBar from "./components/FilterBar";
 import ReservationsTable from "./components/ReservationsTable";
+import ReservationDrawer from "./components/ReservationDrawer";
 import { api } from "./api";
 import type { Filters, Kpis, ReservationsPage } from "./types";
 import { useUI } from "./store";
@@ -12,6 +13,7 @@ const LIMIT = 50;
 
 export default function App() {
   const theme = useUI((s) => s.theme);
+  const selectedId = useUI((s) => s.selectedId);
   const setSelectedId = useUI((s) => s.setSelectedId);
 
   const [kpis, setKpis] = useState<Kpis | null>(null);
@@ -24,9 +26,13 @@ export default function App() {
     document.documentElement.classList.toggle("dark", theme === "dark");
   }, [theme]);
 
-  useEffect(() => {
+  const refreshKpis = useCallback(() => {
     api.kpis().then(setKpis).catch((e) => toast.error(`KPIs: ${e.message}`));
   }, []);
+
+  useEffect(() => {
+    refreshKpis();
+  }, [refreshKpis]);
 
   const load = useCallback(() => {
     setLoading(true);
@@ -62,6 +68,16 @@ export default function App() {
           onPage={setOffset}
         />
       </main>
+      {selectedId && (
+        <ReservationDrawer
+          reservationId={selectedId}
+          onClose={() => setSelectedId(null)}
+          onActed={() => {
+            load();
+            refreshKpis();
+          }}
+        />
+      )}
     </div>
   );
 }
