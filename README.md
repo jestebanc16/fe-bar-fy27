@@ -54,19 +54,19 @@ bronze ─► silver ─► gold   [Unity Catalog: govern, mask PII, lineage]
    │                 │
    │                 └─► Genie Room (natural-language analytics)
 ```
-_(refine as the design firms up)_
 
-## Repo layout (proposed)
+## Repo layout
 
 ```
 .
-├── data/                 # dataset staging / download scripts
-├── notebooks/            # ingestion, transformation, ML — committed WITH outputs
-├── src/                  # shared code (features, model, serving helpers)
-├── app/                  # Databricks App
-├── genie/                # Genie room config / example questions
-├── infra/                # UC setup, Lakebase, serving endpoint definitions
-├── docs/                 # architecture, decisions, deck
+├── databricks.yml        # bundle root: targets (dev, prod) and variables
+├── resources/            # DABs resources: pipeline, jobs, Lakebase, serving, app
+├── src/                  # Databricks notebook sources (.py): ingest, governance, ML, Lakebase
+├── governance/           # Unity Catalog SQL: masks, row filters, tags, comments, grants
+├── app/                  # Databricks App: FastAPI backend (server/) + React frontend (frontend/)
+├── genie/                # Genie space config, serialized export, builder
+├── data/                 # dataset download notes (raw CSV is git-ignored)
+├── docs/                 # design specs, evidence (evidence/), deck (deck/)
 └── README.md
 ```
 
@@ -266,8 +266,9 @@ Honest limit: KPIs are model-scored snapshot metrics over the synced serving tab
 
 ## Evidence of execution
 
-The build is **readable as text** in markdown under [docs/evidence/](docs/evidence/)
-(no notebooks; query results and run output are committed as markdown tables).
+The build is **readable as text**. Evidence is committed as markdown under
+[docs/evidence/](docs/evidence/): query results, run output, and metrics are written as tables
+and code blocks, with the MLflow plots committed as PNGs.
 
 - Lakeflow ingest: DAG, bronze vs CSV counts, silver sample, gold KPIs —
   [lakeflow-ingest-run.md](docs/evidence/lakeflow-ingest-run.md)
@@ -280,26 +281,6 @@ The build is **readable as text** in markdown under [docs/evidence/](docs/eviden
 
 ## Deliverables
 
-- [x] The build (code, notebooks with outputs, app, Genie room) (Genie room and app done)
+- [x] The build (code, app, Genie room)
 - [x] Evidence of execution committed as text
 - [x] Presentation deck — leads with business outcome and quantifies estimated lost revenue
-
-## Open questions / brainstorm
-
-- Target workspace (Lakebase + Genie enabled?)
-- Batch vs. streaming ingestion for Lakeflow
-- Classic ML only, or add the GenAI recommended-action layer?
-- How to frame overbooking recommendation logic (threshold vs. optimization)
-- Deck narrative: executive sponsor (revenue/GM) vs. domain owner (revenue manager)
-
-## Time budget (~4–8 hrs)
-
-| Stage | Est. |
-|-------|------|
-| Ingest + UC setup | 1–1.5 h |
-| Transformations (silver/gold) | 1 h |
-| ML model + tracking + serving | 1.5–2 h |
-| Lakebase serving | 0.5–1 h |
-| Genie room | 0.5 h |
-| Databricks App | 1–1.5 h |
-| Deck | 1 h |
