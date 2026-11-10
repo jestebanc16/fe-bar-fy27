@@ -38,6 +38,45 @@ databricks bundle run hotel_cancel_ml -t dev -p serverless_stable_eojwo0
   `confusion_matrix.png`, `roc_pr_curves.png`, `feature_importance.png`.
 - Registered to UC `hotel_cancel_classifier` v1 and aliased `@champion`.
 
+### Confusion matrix (temporal holdout)
+
+Test set: 24,041 rows, arrivals on/after `2017-04-22` (`n_test` from the MLflow run).
+Threshold 0.5. Counts match the logged artifact
+[confusion_matrix.png](img/confusion_matrix.png).
+
+|                | Predicted kept | Predicted canceled |
+|----------------|---------------:|-------------------:|
+| Actual kept    |         12,291 |              1,902 |
+| Actual canceled|          3,923 |              5,925 |
+
+Precision 5,925 / (5,925 + 1,902) = 0.757. Recall 5,925 / (5,925 + 3,923) = 0.602.
+
+### Feature importance (permutation, ROC-AUC drop)
+
+Top 15 features from permutation importance on the first 5,000 holdout rows
+(`n_repeats=5`, `random_state=42`, scoring `roc_auc`) — the same settings used
+when the train job logged [feature_importance.png](img/feature_importance.png).
+Values are mean ROC-AUC drop when the feature is shuffled. Near-zero / negative
+values are noise.
+
+| Rank | Feature | Importance |
+|-----:|---------|-----------:|
+| 1 | `previous_cancellations` | 0.1647 |
+| 2 | `distribution_channel` | 0.0495 |
+| 3 | `market_segment` | 0.0350 |
+| 4 | `stay_nights` | 0.0095 |
+| 5 | `booking_changes` | 0.0080 |
+| 6 | `arrival_date_week_number` | 0.0050 |
+| 7 | `stays_in_week_nights` | 0.0049 |
+| 8 | `required_car_parking_spaces` | 0.0005 |
+| 9 | `hotel` | 0.0000 |
+| 10 | `arrival_year` | 0.0000 |
+| 11 | `deposit_type` | 0.0000 |
+| 12 | `babies` | −0.0001 |
+| 13 | `days_in_waiting_list` | −0.0001 |
+| 14 | `reserved_room_type` | −0.0005 |
+| 15 | `children` | −0.0007 |
+
 ## 2. Batch score (`hotel_cancel_ml` task `score`, depends on `train`)
 
 ```bash

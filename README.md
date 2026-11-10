@@ -89,6 +89,9 @@ Tables produced in `${catalog}.${schema}`: `bronze_bookings` (Auto Loader raw la
 `gold_hotel_month` (hotel x month cancel rate, ADR, estimated lost revenue). Catalog/schema
 are bundle variables in [databricks.yml](databricks.yml).
 
+Evidence: [docs/evidence/lakeflow-ingest-run.md](docs/evidence/lakeflow-ingest-run.md)
+(pipeline DAG, bronze vs CSV counts, silver sample, gold KPIs for both hotels).
+
 ## Unity Catalog governance
 
 Governance is authored as idempotent SQL in [governance/](governance/) and applied by
@@ -157,7 +160,8 @@ databricks bundle deploy -t dev -p <profile> --var="cancel_model_version=$V"
 ```
 
 Evidence: [docs/evidence/ml-cancel-classifier-run.md](docs/evidence/ml-cancel-classifier-run.md)
-(dev run: ROC-AUC 0.84, 26.8K bookings flagged high-risk, live endpoint prediction).
+(dev run: ROC-AUC 0.84, confusion matrix on the 24,041-row holdout, permutation
+importances, 26.8K bookings flagged high-risk, live endpoint prediction).
 
 ## Lakebase serving + write-back
 
@@ -265,17 +269,22 @@ occupancy. There is no occupancy or RevPAR, because room inventory is not in the
 
 ## Evidence of execution
 
-The build must be **readable as text**. Commit:
+The build is **readable as text** in markdown under [docs/evidence/](docs/evidence/)
+(no notebooks; query results and run output are committed as markdown tables).
 
-- Notebook cells **with outputs visible** (query results, model metrics, sample predictions)
-- Model evaluation: AUC, precision/recall, confusion matrix, feature importances
-- Sample Genie question → answer pairs
-- Logged run output for pipelines
+- Lakeflow ingest: DAG, bronze vs CSV counts, silver sample, gold KPIs —
+  [lakeflow-ingest-run.md](docs/evidence/lakeflow-ingest-run.md)
+- Model evaluation: AUC, precision/recall, confusion matrix, feature importances —
+  [ml-cancel-classifier-run.md](docs/evidence/ml-cancel-classifier-run.md)
+- Sample Genie question → answer pairs —
+  [genie-space-run.md](docs/evidence/genie-space-run.md)
+- Logged run output for governance, Lakebase, and the app — remaining files in
+  [docs/evidence/](docs/evidence/)
 
 ## Deliverables
 
 - [x] The build (code, notebooks with outputs, app, Genie room) (Genie room and app done)
-- [ ] Evidence of execution committed as text
+- [x] Evidence of execution committed as text
 - [ ] Presentation deck — leads with business outcome, quantifies impact in RevPAR / occupancy / lost-revenue terms
 
 ## Open questions / brainstorm
