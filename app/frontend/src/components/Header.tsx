@@ -10,9 +10,9 @@ export default function Header() {
         <div className="flex items-center gap-2">
           <TrendingUp className="h-6 w-6 text-indigo-600 dark:text-indigo-400" />
           <div>
-            <h1 className="text-base font-semibold sm:text-lg">Hotel Revenue Manager</h1>
+            <h1 className="text-base font-semibold sm:text-lg">Meridian Hotels &amp; Resorts</h1>
             <p className="text-xs text-slate-500 dark:text-slate-400">
-              At-risk reservations &amp; actions
+              Revenue Manager · At-risk reservations &amp; actions
             </p>
           </div>
         </div>

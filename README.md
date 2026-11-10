@@ -2,6 +2,8 @@
 
 End-to-end hotel booking cancellation intelligence on Databricks — from raw bookings to real-time risk scoring, natural-language analytics, and a revenue-management app.
 
+**Company:** Meridian Hotels & Resorts (fictional). The scenario is set at Meridian, whose revenue managers use this platform to act on booking cancellations across its properties.
+
 ## The problem
 
 Hotels lose meaningful revenue to booking cancellations: rooms held for guests who never arrive, released too late to resell. Revenue managers need to know **which reservations are likely to cancel**, **how it moves occupancy and RevPAR**, and **what to do about it** (deposit requests, controlled overbooking, re-confirmation nudges) — in time to act.

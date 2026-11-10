@@ -17,7 +17,7 @@ async def lifespan(_app: FastAPI):
     close_pool()
 
 
-app = FastAPI(title="Hotel Revenue-Manager App", lifespan=lifespan)
+app = FastAPI(title="Meridian Hotels & Resorts – Revenue-Manager App", lifespan=lifespan)
 
 for module in (health, kpis, reservations, actions):
     app.include_router(module.router, prefix="/api")
