@@ -16,3 +16,8 @@ env:
     value: "hotel-lakebase"
   - name: PGDATABASE
     value: "hotel"
+  # Postgres schema for the synced serving table (= UC schema / ${var.schema}).
+  # Dev default. For the prod target, set this to hotel_booking before deploy
+  # (app.yaml does not expand bundle variables).
+  - name: SERVING_SCHEMA
+    value: "hotel_booking_dev"

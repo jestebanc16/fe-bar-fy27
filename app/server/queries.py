@@ -3,16 +3,22 @@
 No database, no environment, no I/O — every function here is deterministic and
 unit-tested (see tests/test_queries.py). Routes (server/routes/*) compose these
 with the connection pool in server/db.py.
+
+SERVING_SCHEMA defaults to the dev UC/Postgres schema; override via the
+SERVING_SCHEMA env var (set per target in app.yaml / deploy) so prod can point
+at hotel_booking without code changes.
 """
 from __future__ import annotations
+
+import os
 
 VALID_ACTION_TYPES: tuple[str, ...] = (
     "reconfirmed", "deposit_requested", "overbooked_backup", "released", "note",
 )
 VALID_RISK_BANDS: tuple[str, ...] = ("high", "medium", "low")
 
-# Dev target. For prod, override to hotel_booking.reservation_risk_serving_synced.
-SERVING_TABLE = "hotel_booking_dev.reservation_risk_serving_synced"
+SERVING_SCHEMA = os.environ.get("SERVING_SCHEMA", "hotel_booking_dev")
+SERVING_TABLE = f"{SERVING_SCHEMA}.reservation_risk_serving_synced"
 ACTION_TABLE = "public.reservation_action"
 
 RESERVATION_COLUMNS = (

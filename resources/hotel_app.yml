@@ -9,6 +9,7 @@ resources:
       resources:
         - name: lakebase
           database:
-            instance_name: hotel-lakebase
+            instance_name: ${resources.database_instances.hotel_lakebase.name}
             database_name: hotel
             permission: CAN_CONNECT_AND_CREATE
+

@@ -28,6 +28,12 @@ resources:
             base_parameters:
               instance_name: ${resources.database_instances.hotel_lakebase.name}
               database: hotel
+              # Synced-table Postgres schema matches the UC schema (${var.schema}).
+              serving_schema: ${var.schema}
+              # App SP Postgres role is created when the app attaches the database
+              # resource; grants are skipped (not failed) until that role exists.
+              app_name: ${resources.apps.hotel_revenue_app.name}
+              serving_table: reservation_risk_serving_synced
           environment_key: default
 
         - task_key: refresh_sync
