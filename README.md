@@ -6,7 +6,7 @@ End-to-end hotel booking cancellation intelligence on Databricks — from raw bo
 
 ## The problem
 
-Hotels lose meaningful revenue to booking cancellations: rooms held for guests who never arrive, released too late to resell. Revenue managers need to know **which reservations are likely to cancel**, **how it moves occupancy and RevPAR**, and **what to do about it** (deposit requests, controlled overbooking, re-confirmation nudges) — in time to act.
+Hotels lose meaningful revenue to booking cancellations: rooms held for guests who never arrive, released too late to resell. Revenue managers need to know **which reservations are likely to cancel** and **what to do about it** (deposit requests, controlled overbooking, re-confirmation nudges) — in time to act.
 
 This project turns raw booking data into a live, decision-ready workflow across the full Lakehouse.
 
@@ -14,10 +14,9 @@ This project turns raw booking data into a live, decision-ready workflow across 
 
 Lead with the buyer's numbers:
 
-- **Revenue lost to last-minute cancellations** ($)
-- **RevPAR** (revenue per available room)
-- **Occupancy %** and **on-the-books forecast accuracy**
-- **Overbooking accuracy** (rooms recovered without walk-outs)
+- **Estimated revenue lost to cancellations** ($, room-night proxy: ADR × nights for canceled bookings)
+- **Cancellation rate** (overall and by hotel)
+- **Cancel probability per reservation** (model-scored, risk bands)
 
 ## Dataset
 
@@ -34,8 +33,8 @@ Lead with the buyer's numbers:
 | **Govern** | Unity Catalog | Personas + column masks (country/agent/company), per-property row-level security, data dictionary, classification tags, lineage |
 | **Make it intelligent** | ML | Cancellation-probability classifier (sklearn/HistGradientBoosting) on `silver_bookings`; MLflow tracking, UC-registered `hotel_cancel_classifier@champion`, batch `reservation_risk` table + real-time serving endpoint |
 | **Serve operationally** | Lakebase | Low-latency store of per-reservation risk scores + recommended actions for the app |
-| **Make it queryable** | Genie Room | Natural-language analytics: "expected cancellation rate for December?", "occupancy forecast next month?" |
-| **Surface to the business** | Databricks App | Revenue-manager view: at-risk reservations, occupancy impact, recommended actions |
+| **Make it queryable** | Genie Room | Natural-language analytics: "expected cancellation rate for December?", "which hotel cancels more?" |
+| **Surface to the business** | Databricks App | Revenue-manager view: at-risk reservations, recorded actions |
 
 ## Architecture
 
@@ -230,9 +229,8 @@ Query the space via `ask_genie(space_id="01f1bc510bc211139339758ac42c1d1a", ques
 Genie Conversation API. To migrate to another workspace, re-import the serialized lockfile
 (`manage_genie import`), remapping the catalog for a future prod space.
 
-Note: this is a single dev space. Honest limits — no occupancy/RevPAR (room inventory not in the
-dataset); `reservation_risk` has no per-reservation arrival date, so risk answers are
-aggregate/hotel-level, not time-series.
+Note: this is a single dev space. Honest limit: `reservation_risk` has no per-reservation arrival
+date, so risk answers are aggregate/hotel-level, not time-series.
 
 ## Databricks App — revenue-manager UI
 
@@ -264,8 +262,7 @@ request, overbooking backup, release, note) back to Postgres.
 - **Evidence:** [docs/evidence/app-run.md](docs/evidence/app-run.md) (screenshots, write-back
   round-trip, KPI parity against Lakebase).
 
-Honest limits: KPIs are model-scored snapshot metrics over the synced serving table, not live
-occupancy. There is no occupancy or RevPAR, because room inventory is not in the dataset.
+Honest limit: KPIs are model-scored snapshot metrics over the synced serving table, not live data.
 
 ## Evidence of execution
 
@@ -285,7 +282,7 @@ The build is **readable as text** in markdown under [docs/evidence/](docs/eviden
 
 - [x] The build (code, notebooks with outputs, app, Genie room) (Genie room and app done)
 - [x] Evidence of execution committed as text
-- [ ] Presentation deck — leads with business outcome, quantifies impact in RevPAR / occupancy / lost-revenue terms
+- [x] Presentation deck — leads with business outcome and quantifies estimated lost revenue
 
 ## Open questions / brainstorm
 
