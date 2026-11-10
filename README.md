@@ -12,6 +12,10 @@ This project turns raw booking data into a live, decision-ready workflow across 
 
 ## Business outcome & KPIs
 
+**Owners:** the **VP of Revenue Management** owns the margin and exposure numbers and the
+decisions they inform (deposit policy, overbooking policy, pilot approval). The **revenue
+manager** is the operational user who works the at-risk list day to day.
+
 Lead with the buyer's numbers:
 
 - **Estimated revenue lost to cancellations** ($, room-night proxy: ADR × nights for canceled bookings)

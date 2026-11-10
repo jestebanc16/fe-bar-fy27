@@ -125,3 +125,42 @@ Rules:
 - 39.8% is the average of the 12 monthly 2016 rates. Do not use 41.7%, which is City Hotel's all-years cancel rate and belongs on slide 3's per-hotel comparison only.
 - Keep the other slide 3 text unchanged: City Hotel 79,330 bookings, $10.9M, 41.7% cancel rate; Resort Hotel 40,059 bookings, $5.8M, 27.8% cancel rate; peak month note; source line.
 - Return the revised slide 3 only, with the same visual style as slides 1–12.
+
+---
+
+REVISION: NEW SLIDE 12 (EXECUTIVE VIEW), APPENDIX MOVES TO SLIDE 13
+
+Add a new slide 12 for the VP of Revenue Management. Renumber the appendix from 12 to 13. Keep all other slides unchanged. The deck is now 13 slides.
+
+Audience: the VP of Revenue Management, who owns the margin and exposure numbers and the decisions they inform (deposit policy, overbooking policy, pilot approval). The revenue manager is the operational user on slides 8 and 9. This slide is framed in margin and exposure terms, not the operational worklist.
+
+Slide 12 title (use exactly):
+"Where the margin is exposed, and the three decisions this needs"
+
+Section 1, "Exposure we can quantify today (estimated)":
+- $16.7M estimated lost room-night revenue across two hotels: City Hotel $10.9M (about 65%), Resort Hotel $5.8M.
+- Cancellation rate: 37.0% overall; City Hotel 41.7%, Resort Hotel 27.8%.
+- 26,814 high-risk reservations (~22.5% of 119,389) form the actionable set.
+- Method note: est. lost revenue = ADR × stay nights, for canceled bookings. A room-night proxy, not RevPAR.
+
+Section 2, "Sensitivity (illustrative, not a result)":
+- Each 1% of the $16.7M recovered is about $167K.
+- 5% is about $836K. 10% is about $1.67M.
+- Label clearly as arithmetic on the exposure, not a forecast.
+
+Section 3, "Decisions for the VP":
+- 1. Deposit policy: whether to require deposits from high-risk reservations, and at what threshold.
+- 2. Overbooking policy: whether to allow controlled overbooking backed by a backup booking, and how large a buffer to hold.
+- 3. Pilot approval: approve a one-property pilot with a randomized control group, so recovery is measured rather than assumed.
+
+Section 4, "What the pilot will measure before any dollar figure is claimed":
+- Recovered room-nights and avoided lost revenue for flagged bookings that got an action, against a control group that did not.
+- Overbooking accuracy: rooms recovered without walk-outs.
+
+Footer line: "No recovery dollar figure is claimed until the pilot measures it."
+
+Rules:
+- Use only the figures above. Do not add new dollar figures, RevPAR, or occupancy.
+- Keep the honesty rules from the main prompt. Label every estimate as an estimate.
+- Speaker notes for slide 12: 2–4 sentences, written for the VP.
+- Return the new slide 12 only, with the same visual style as slides 1–11.
