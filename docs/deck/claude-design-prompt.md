@@ -108,3 +108,20 @@ Rules:
 - Keep the existing slide-number and footer treatment.
 - Return the revised slide 11 only, with the same visual style as slides 1–10.
 - Speaker notes for slide 11: 2–4 sentences, using the same honesty rules.
+
+---
+
+REVISION: SLIDE 3
+
+Revise slide 3 only. Keep the other slides, palette, fonts, and layout unchanged.
+
+Fix the chart label. The monthly line chart shows City Hotel's 2016 monthly cancel rates
+(sample values in numbers.md). The current label "City Hotel cancel rate by month, 2016 · avg 41.7%" is wrong.
+
+Use exactly this label for the chart header:
+"City Hotel cancel rate by month, 2016 · avg 39.8%"
+
+Rules:
+- 39.8% is the average of the 12 monthly 2016 rates. Do not use 41.7%, which is City Hotel's all-years cancel rate and belongs on slide 3's per-hotel comparison only.
+- Keep the other slide 3 text unchanged: City Hotel 79,330 bookings, $10.9M, 41.7% cancel rate; Resort Hotel 40,059 bookings, $5.8M, 27.8% cancel rate; peak month note; source line.
+- Return the revised slide 3 only, with the same visual style as slides 1–12.

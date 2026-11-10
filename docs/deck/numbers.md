@@ -39,6 +39,9 @@ Use these figures exactly. Sources are the committed evidence docs under
 
 ### City Hotel monthly cancel rates (2016 sample for trend chart)
 
+Average of the 12 monthly 2016 rates below: **39.8%** (0.3979). Label the chart
+"2016 avg 39.8%". Do not use 41.7% for this chart; 41.7% is City Hotel's all-years rate.
+
 | Month | Cancel rate |
 |------:|------------:|
 | Jan | 0.3211 |
