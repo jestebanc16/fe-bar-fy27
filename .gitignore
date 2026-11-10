@@ -12,3 +12,6 @@ data/*.zip
 
 # Editor-local config (Databricks VS Code extension notebook settings, etc.)
 .vscode/
+
+# Frontend build output (regenerate with npm run build)
+app/frontend/dist/
