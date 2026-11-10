@@ -230,6 +230,39 @@ Note: this is a single dev space. Honest limits — no occupancy/RevPAR (room in
 dataset); `reservation_risk` has no per-reservation arrival date, so risk answers are
 aggregate/hotel-level, not time-series.
 
+## Databricks App — revenue-manager UI
+
+The revenue-manager view for Meridian Hotels & Resorts. It triages at-risk reservations from the
+Lakebase serving layer, shows portfolio KPIs, and records operational actions (reconfirm, deposit
+request, overbooking backup, release, note) back to Postgres.
+
+- **What it does:** filter and page through reservations by hotel, risk band, segment, and lead
+  time; open a reservation to see its risk factors and prior actions; record an action
+  (write-back to `public.reservation_action`). Responsive UI with light/dark mode.
+- **Architecture:** FastAPI backend (`app/server/`) serving a React + Vite + Tailwind SPA
+  (`app/frontend/`). One Lakebase Postgres data plane: reads from the synced table
+  `reservation_risk_serving_synced`, writes to `reservation_action`. Connection uses the classic
+  GA Database-Instance credential path (`w.database.generate_database_credential`) with
+  runtime-injected `PGHOST`/`PGUSER` and an SDK `read_write_dns` fallback. `acted_by` comes from
+  the forwarded end-user identity header.
+- **Deploy:** declared as the `hotel_revenue_app` `apps` resource in
+  [resources/hotel_app.yml](resources/hotel_app.yml), shipped with
+  `databricks bundle deploy -t dev -p <profile>`, started with
+  `databricks bundle run hotel_revenue_app -t dev -p <profile>`. The app's Postgres grants are
+  applied by the `hotel_lakebase_sync` job (`provision_writeback`), so new environments get them
+  from `databricks bundle run hotel_lakebase_sync -t dev -p <profile>`. For prod, set
+  `SERVING_SCHEMA` in [app/app.yaml](app/app.yaml) to `hotel_booking` before deploy.
+- **Prerequisites:** the `hotel-lakebase` instance must be running (set `stopped: true` when idle
+  to save cost). Start the app once after first deploy so Databricks provisions its Postgres role.
+- **Local dev:** `cd app && DATABRICKS_PROFILE=<profile> uv run uvicorn app:app --port 8000`, and
+  `cd app/frontend && npm run dev` for the UI.
+- **Logs:** `databricks apps logs hotel-revenue-app -p <profile>`, or `<app-url>/logz`.
+- **Evidence:** [docs/evidence/app-run.md](docs/evidence/app-run.md) (screenshots, write-back
+  round-trip, KPI parity against Lakebase).
+
+Honest limits: KPIs are model-scored snapshot metrics over the synced serving table, not live
+occupancy. There is no occupancy or RevPAR, because room inventory is not in the dataset.
+
 ## Evidence of execution
 
 The build must be **readable as text**. Commit:
@@ -241,7 +274,7 @@ The build must be **readable as text**. Commit:
 
 ## Deliverables
 
-- [ ] The build (code, notebooks with outputs, app, Genie room) (Genie room done)
+- [x] The build (code, notebooks with outputs, app, Genie room) (Genie room and app done)
 - [ ] Evidence of execution committed as text
 - [ ] Presentation deck — leads with business outcome, quantifies impact in RevPAR / occupancy / lost-revenue terms
 
