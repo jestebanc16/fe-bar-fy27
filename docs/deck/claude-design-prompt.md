@@ -97,10 +97,10 @@ Section 3, "Pilot will measure":
 - Recovered rooms and avoided lost revenue at one property.
 - Overbooking accuracy: rooms recovered without walk-outs.
 
-Section 4, "Not measurable with this dataset":
-- RevPAR and occupancy impact. Both need room inventory data, which this dataset does not include.
+Section 4, "Next steps":
+- Pilot at one property: measure recovered rooms and avoided lost revenue.
 
-Footer line: "Next: pilot at one property, measure recovery, then add room inventory for RevPAR and occupancy."
+Footer line: "Next: pilot at one property, then measure recovered revenue."
 
 Rules:
 - Do not claim measured RevPAR lift, occupancy improvement, overbooking accuracy, or any recovered dollar figure from the app. The pilot has not run.
